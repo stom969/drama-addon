@@ -1,7 +1,7 @@
 const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
 
 // ⚠️ PASTE YOUR TMDB API KEY HERE
-const TMDB_API_KEY = '4e218cb7ac9af83106f9810ea3123897';
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 // ⚠️ PASTE YOUR VIKI PROVIDER IDS HERE (verify with the steps in chat)
 const VIKI_PROVIDER_ID_US = '344';
