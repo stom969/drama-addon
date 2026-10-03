@@ -7,11 +7,14 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const VIKI_PROVIDER_ID_US = '344';
 const VIKI_PROVIDER_ID_UK = '344';
 
+// Netflix's TMDB provider ID (same worldwide, but content varies by region)
+const NETFLIX_PROVIDER_ID = '8';
+
 const manifest = {
     id: 'org.myname.asian.dramas',
-    version: '1.0.1',
+    version: '1.0.2',
     name: 'Asian Drama Catalog',
-    description: 'Japanese, Korean, and Chinese dramas from TMDB and Viki',
+    description: 'Japanese, Korean, and Chinese dramas from TMDB, Viki, and Netflix',
     resources: ['catalog'],
     types: ['series'],
     catalogs: [
@@ -38,6 +41,12 @@ const manifest = {
             id: 'vikidramas',
             name: 'Viki Dramas',
             extra: [{ name: 'search', isRequired: false }, { name: 'skip' }]
+        },
+        {
+            type: 'series',
+            id: 'netflix_kdramas',
+            name: 'Netflix K-Dramas',
+            extra: [{ name: 'search', isRequired: false }, { name: 'skip' }]
         }
     ],
     idPrefixes: ['tt']
@@ -61,7 +70,7 @@ async function tmdbFetch(path, params = {}) {
     return response.json();
 }
 
-// Updated helper with better posters, backgrounds, and logos
+// Helper with posters, backgrounds, and logos
 async function toStremioMeta(item) {
     let imdbId = null;
     let images = { backdrops: [], logos: [] };
@@ -212,6 +221,21 @@ builder.defineCatalogHandler(async (args) => {
             }
 
             results.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+        }
+
+        // --- Netflix K-Dramas ---
+        else if (args.id === 'netflix_kdramas') {
+            const data = await tmdbFetch('/discover/tv', {
+                watch_region: 'US',              // Change to 'GB', 'CA', etc. if you prefer
+                with_watch_providers: NETFLIX_PROVIDER_ID,
+                with_original_language: 'ko',
+                with_genres: '18',
+                without_genres: '16',
+                sort_by: 'popularity.desc',
+                'first_air_date.gte': '2000-01-01',
+                page: tmdbPage
+            });
+            results = data.results;
         }
 
         results = results.slice(offsetInPage, offsetInPage + 20);
